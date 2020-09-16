@@ -1,6 +1,9 @@
+# install.packages("ggpubr")
+
 library(dplyr)    
 library(ggplot2)
 library(scales)
+library(ggpubr)
 
 # 1. Are there any cryptocurrencies listed in this dataset that have no known market capitalization (market_cap_usd)?
 
@@ -120,55 +123,109 @@ ggplot(cripto3top10_7d, aes(x=factor((reorder(name, desc(percent_change_7d)))), 
 
 cripto4 = cripto
 
-cripto4daily = rbind(cripto4 %>% 
+cripto4dailyLosers = cripto4 %>% 
                        filter(! is.na(market_cap_usd)) %>% 
                        arrange(percent_change_24h) %>% 
                        mutate(group = "Daily") %>% 
                        select(name, percent_change_24h, market_cap_usd, group) %>% 
                        rename(perc = percent_change_24h) %>% 
-                       head(1),
-                     cripto4 %>% 
-                       filter(! is.na(market_cap_usd)) %>% 
-                       arrange(desc(percent_change_24h)) %>% 
-                       mutate(group = "Daily") %>% 
-                       select(name, percent_change_24h, market_cap_usd, group) %>% 
-                       rename(perc = percent_change_24h) %>% 
-                       head(1))
+                       head(5)
 
 
-cripto4weekly = rbind(cripto4 %>% 
+cripto4weeklyLosers = cripto4 %>% 
                        filter(! is.na(market_cap_usd)) %>% 
                        arrange(percent_change_7d) %>% 
                        mutate(group = "Weekly") %>% 
                        select(name, percent_change_7d, market_cap_usd, group) %>% 
                        rename(perc = percent_change_7d) %>% 
-                       head(1),
-                     cripto4 %>% 
+                       head(5)
+
+
+cripto4dailyGainers = cripto4 %>% 
                        filter(! is.na(market_cap_usd)) %>% 
-                       arrange(desc(percent_change_7d)) %>% 
-                       mutate(group = "Weekly") %>% 
-                       select(name, percent_change_7d, market_cap_usd, group) %>% 
-                       rename(perc = percent_change_7d) %>% 
-                       head(1))
-
-cripto4plot = rbind(cripto4daily, cripto4weekly)
+                       arrange(desc(percent_change_24h)) %>% 
+                       mutate(group = "Daily") %>% 
+                       select(name, percent_change_24h, market_cap_usd, group) %>% 
+                       rename(perc = percent_change_24h) %>% 
+                       head(5)
 
 
-ggplot(cripto4plot, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=market_cap_usd, width=0.8))+
+cripto4weeklyGainers = cripto4 %>% 
+                        filter(! is.na(market_cap_usd)) %>% 
+                        arrange(desc(percent_change_7d)) %>% 
+                        mutate(group = "Weekly") %>% 
+                        select(name, percent_change_7d, market_cap_usd, group) %>% 
+                        rename(perc = percent_change_7d) %>% 
+                        head(5)
+
+cripto4plotLosers = rbind(cripto4dailyLosers, cripto4weeklyLosers)
+cripto4plotGainers = rbind(cripto4dailyGainers, cripto4weeklyGainers)
+
+
+dl = ggplot(cripto4dailyLosers, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=market_cap_usd, width=0.8))+
   geom_bar(position = 'dodge', stat='identity') +
-  labs(title = "Daily and weekly biggest gainers and the biggest losers in market capitalization\n", x = "Cryptocurrency", y = "Percentage change (%)", fill = "Market Capitalization") +
+  labs(title = "Daily biggest losers in market capitalization\n", x = "Cryptocurrency", y = "Percentage change (%)", fill = "Market Capitalization") +
 
   guides(fill = guide_colourbar(barwidth = 0.8, barheight = 15))+
-  scale_fill_gradient2(  low = muted("red"),
-                         high = muted("blue"),
-                         midpoint = median(cripto4plot$market_cap_usd)*1.1,
-                         space = "Lab",
-                         na.value = "grey50",
+  scale_fill_gradient2(  high="red",
+                         low="red1",
+                         midpoint = 30000,
                          guide = "colourbar",
-                         aesthetics = "fill", label = comma, breaks = c(min(cripto4plot$market_cap_usd), 20000000, 10000000, 30000000, 40000000, max(cripto4plot$market_cap_usd)))+
-      facet_wrap (~group,
-              nrow=1,scales="fixed")+
+                         aesthetics = "fill", label = comma)+
+      # facet_wrap (~group,
+      #         nrow=1,scales="fixed", ncol=2)+
   theme(plot.title = element_text(hjust = 0.5)) 
+
+wl = ggplot(cripto4weeklyLosers, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=market_cap_usd, width=0.8))+
+  geom_bar(position = 'dodge', stat='identity') +
+  labs(title = "Weekly biggest losers in market capitalization\n", x = "Cryptocurrency", y = "Percentage change (%)", fill = "Market Capitalization") +
+  
+  guides(fill = guide_colourbar(barwidth = 0.8, barheight = 15))+
+  scale_fill_gradient2(  high="red",
+                         low="red",
+                         midpoint = 11933,
+                         guide = "colourbar",
+                         aesthetics = "fill", label = comma)+
+  # facet_wrap (~group,
+  #         nrow=1,scales="fixed", ncol=2)+
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+
+
+dg = ggplot(cripto4dailyGainers, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=market_cap_usd, width=0.8))+
+  geom_bar(position = 'dodge', stat='identity') +
+  labs(title = "Daily biggest gainers in market capitalization\n", x = "Cryptocurrency", y = "Percentage change (%)", fill = "Market Capitalization") +
+  
+  guides(fill = guide_colourbar(barwidth = 0.8, barheight = 15))+
+  scale_fill_gradient2(  high="chartreuse3",
+                         low="chartreuse3",
+                         midpoint = 5999999,
+                         space = "Lab",
+                         guide = "colourbar",
+                         aesthetics = "fill", label = comma)+
+  # facet_wrap (~group,
+  #         nrow=1,scales="fixed", ncol=2)+
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+
+wg = ggplot(cripto4weeklyGainers, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=market_cap_usd, width=0.8))+
+  geom_bar(position = 'dodge', stat='identity') +
+  labs(title = "Weekly biggest gainers in market capitalization\n", x = "Cryptocurrency", y = "Percentage change (%)", fill = "Market Capitalization") +
+  
+  guides(fill = guide_colourbar(barwidth = 0.8, barheight = 15))+
+  scale_fill_gradient2(  high="chartreuse3",
+                         low="chartreuse3",
+                         midpoint = 7000000,
+                         space = "Lab",
+                         guide = "colourbar",
+                         aesthetics = "fill", label = comma)+
+  # facet_wrap (~group,
+  #         nrow=1,scales="fixed", ncol=2)+
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+figure = ggarrange(dg, wg, dl, wl, ncol = 2, nrow = 2)
+figure
+
 
 # 5. In general, cryptocurrencies with smaller capitalization are less stable projects, 
 # and therefore even riskier investments than the bigger ones. Following the Investopedia's large capitalization 
@@ -179,29 +236,34 @@ ggplot(cripto4plot, aes(x=factor((reorder(name, desc(perc)))), y=perc, fill=mark
 cripto5 = cripto
 
 
-# cripto5TopCap = cripto5 %>% 
-#   arrange(desc(market_cap_usd)) %>% 
-#   select(name) %>% 
-#   head(10)
+cripto5TopCap = cripto5 %>%
+  filter(market_cap_usd >= 10000000000) %>% 
+  arrange(desc(market_cap_usd))
 
 cripto5TopCap = rbind(cripto5 %>% 
-                        filter(! is.na(market_cap_usd)) %>% 
-                        group_by(name, market_cap_usd, percent_change_24h) %>% 
-                        summarise(MCperc = market_cap_usd/sum(cripto5$market_cap_usd, na.rm=T)*100) %>% 
+                        filter(market_cap_usd >= 10000000000) %>% 
+                        group_by(name, market_cap_usd, percent_change_1h) %>% 
+                        summarise(MCperc = market_cap_usd/1000000000) %>% 
                         arrange(desc(market_cap_usd)) %>% 
-                        mutate(group = "Daily") %>% 
-                        select(name, percent_change_24h, MCperc, group) %>% 
-                        rename(perc = percent_change_24h) %>% 
-                        head(3),
+                        mutate(group = "A)1 hour") %>% 
+                        select(name, percent_change_1h, MCperc, group) %>% 
+                        rename(perc = percent_change_1h),
                       cripto5 %>% 
-                        filter(! is.na(market_cap_usd)) %>% 
-                        group_by(name, market_cap_usd, percent_change_7d) %>% 
-                        summarise(MCperc = market_cap_usd/sum(cripto5$market_cap_usd, na.rm=T)*100) %>% 
+                        filter(market_cap_usd >= 10000000000) %>% 
+                        group_by(name, market_cap_usd, percent_change_24h) %>% 
+                        summarise(MCperc = market_cap_usd/1000000000) %>% 
                         arrange(desc(market_cap_usd)) %>% 
-                        mutate(group = "Weekly") %>% 
+                        mutate(group = "B) 1 day") %>% 
+                        select(name, percent_change_24h, MCperc, group) %>% 
+                        rename(perc = percent_change_24h),
+                      cripto5 %>% 
+                        filter(market_cap_usd >= 10000000000) %>% 
+                        group_by(name, market_cap_usd, percent_change_7d) %>% 
+                        summarise(MCperc = market_cap_usd/1000000000) %>% 
+                        arrange(desc(market_cap_usd)) %>% 
+                        mutate(group = "C) 7 days") %>% 
                         select(name, percent_change_7d, MCperc, group) %>% 
-                        rename(perc = percent_change_7d) %>% 
-                        head(3))
+                        rename(perc = percent_change_7d))
 
 
 # cripto5BotCap = cripto5 %>% 
@@ -236,13 +298,19 @@ cripto5TopCap = rbind(cripto5 %>%
   
 ggplot(cripto5TopCap)+
   geom_bar(aes(x=factor((reorder(name, desc(MCperc)))), y=perc, fill=MCperc),position = 'dodge', stat="identity")+
-  scale_y_continuous(breaks = c(-10,0,10,20), limits = c(-10,20)) +
-  labs(title = "Top 3 cryptocurrency in terms of Market Capitalization and its daily and weekly changes\n", x = "Cryptocurrency", y = "Change(%)", fill = "Market Capitalization(%)") +
+  scale_y_continuous(breaks = c(-10,0,30,60,90, 120, 150, 180, 210, 240, 270, 300), limits = c(-10,260)) +
+  labs(title = "Cryptocurrencies with large market capitalization and its changes\n", x = "Cryptocurrency", y = "Change(%)", fill = "Market Capitalization(Billions)") +
   # geom_point(aes(x=factor((reorder(name, desc(MCperc)))), y=MCperc, width=0.8))+
   # scale_y_continuous(sec.axis = sec_axis(~.+40, name = "series2"))
+  scale_fill_gradient2(  high="chartreuse3",
+                         low="red",
+                         midpoint = 125,
+                         space = "Lab",
+                         guide = "colourbar",
+                         aesthetics = "fill", label = comma)+
   facet_wrap (~group,
-              nrow=1,scales="fixed")
-
+              nrow=1,scales="fixed")+
+  theme(plot.title = element_text(hjust = 0.5)) 
 
 
 # 6. Raise at least one question from your own regarding the bitcoin cryptocurrency market
